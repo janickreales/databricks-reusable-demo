@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Databricks Connect
+.databricks/
+.databricks-connect
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+
+# OS
+.DS_Store
