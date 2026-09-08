@@ -1,9 +1,9 @@
 """Transformaciones para el cálculo de margen de rentabilidad por nación/año.
 
 Implementa el orden de joins documentado en DECISIONS.md: primero se construye
-una dimensión pequeña (part filtrado + partsupp + supplier + nation) usando
-broadcast joins encadenados, y solo al final se une contra lineitem — la tabla
-de 30M filas — como el lado grande de un broadcast join, para evitar shufflearla.
+una dimensión pequeña (part filtrado + partsupp + supplier + nation), y solo
+al final se une contra lineitem — la tabla de 30M filas — manteniéndola
+siempre como el lado grande del join, sin forzar un broadcast sobre ella.
 """
 
 from pyspark.sql import DataFrame
@@ -35,7 +35,7 @@ def build_green_part_dimension(
     return (
         broadcast(part_filtered)
         .join(
-            broadcast(partsupp_selected),
+            partsupp_selected,
             part_filtered.p_partkey == partsupp_selected.ps_partkey,
         )
         .join(
@@ -56,19 +56,20 @@ def join_with_lineitem_and_orders(
     lineitem: DataFrame,
     orders: DataFrame,
 ) -> DataFrame:
-    """Une la dimensión reducida contra lineitem (broadcast) y luego contra orders.
+    """Une la dimensión reducida contra lineitem y luego contra orders.
 
-    lineitem nunca se shufflea: siempre es el lado grande del broadcast join
-    (Decisión 1). El join con orders ocurre DESPUÉS, sobre el resultado ya
-    reducido por el filtro de producto, no sobre lineitem completo.
+    lineitem nunca se fuerza como lado broadcast: siempre es el lado grande
+    del join, dejando que AQE decida si conviene convertir la dimensión ya
+    reducida en el lado broadcast (Decisión 1). El join con orders ocurre
+    DESPUÉS, sobre el resultado ya reducido por el filtro de producto, no
+    sobre lineitem completo.
     """
     return (
-        broadcast(lineitem)
-        .join(
+        lineitem.join(
             dimension,
-            lineitem.l_partkey == dimension.p_partkey,
-        )
-        .join(
+            (lineitem.l_partkey == dimension.p_partkey)
+            & (lineitem.l_suppkey == dimension.ps_suppkey),
+        ).join(
             orders,
             lineitem.l_orderkey == orders.o_orderkey,
         )

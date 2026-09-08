@@ -12,6 +12,12 @@ def test_part_name_filter_is_non_empty_string() -> None:
     assert isinstance(config.PART_NAME_FILTER, str) and config.PART_NAME_FILTER
 
 
+def test_output_catalog_schema_and_table_are_non_empty_strings() -> None:
+    assert isinstance(config.OUTPUT_CATALOG, str) and config.OUTPUT_CATALOG
+    assert isinstance(config.OUTPUT_SCHEMA, str) and config.OUTPUT_SCHEMA
+    assert isinstance(config.OUTPUT_TABLE, str) and config.OUTPUT_TABLE
+
+
 def test_serverless_dbu_rate_is_positive_number() -> None:
     assert isinstance(config.SERVERLESS_DBU_RATE_USD, (int, float))
     assert config.SERVERLESS_DBU_RATE_USD > 0

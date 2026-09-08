@@ -2,7 +2,7 @@ import argparse
 
 from databricks.connect import DatabricksSession
 
-from src.config import PART_NAME_FILTER
+from src.config import OUTPUT_CATALOG, OUTPUT_SCHEMA, OUTPUT_TABLE, PART_NAME_FILTER
 from src.etl.extract import (
     read_lineitem,
     read_nation,
@@ -11,6 +11,7 @@ from src.etl.extract import (
     read_partsupp,
     read_supplier,
 )
+from src.etl.load import write_profit_report
 from src.etl.transform import (
     build_green_part_dimension,
     calculate_profit_margin,
@@ -58,6 +59,12 @@ def main(diagnostics: bool = False) -> None:
     )
     result = calculate_profit_margin(joined)
     result.show(20)
+    write_profit_report(
+        result,
+        catalog=OUTPUT_CATALOG,
+        schema=OUTPUT_SCHEMA,
+        table_name=OUTPUT_TABLE,
+    )
 
 
 if __name__ == "__main__":
