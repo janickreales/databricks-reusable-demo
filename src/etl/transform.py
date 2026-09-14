@@ -26,9 +26,9 @@ def build_green_part_dimension(
     las columnas necesarias en cada paso para mantener el tamaño del broadcast
     bajo control (ps_partkey, ps_suppkey, ps_supplycost, n_name).
     """
-part_filtered = broadcast(
-        part.filter(F.col("p_name").contains(part_name_filter)).select(
-            "p_partkey", "p_name"
+    part_filtered = broadcast(
+        part.sparkSession.sql(
+            f"SELECT p_partkey, p_name FROM {CATALOG}.{SCHEMA}.part WHERE p_name LIKE '%{part_name_filter}%'"
         )
     )
     partsupp_selected = partsupp.select("ps_partkey", "ps_suppkey", "ps_supplycost")
@@ -70,7 +70,7 @@ def join_with_lineitem_and_orders(
     return (
         lineitem.join(
             dimension,
-(lineitem.l_partkey == dimension.p_partkey)
+            (lineitem.l_partkey == dimension.p_partkey)
             & (lineitem.l_suppkey == dimension.ps_suppkey),
         ).join(
             orders,
