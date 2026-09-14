@@ -27,10 +27,10 @@ def build_green_part_dimension(
     bajo control (ps_partkey, ps_suppkey, ps_supplycost, n_name).
     """
 part_filtered = broadcast(
-        part.filter(F.col("p_name").contains(part_name_filter)).select(
-            "p_partkey", "p_name"
-        )
+    part.filter(F.col("p_name").contains(part_name_filter)).select(
+        "p_partkey", "p_name"
     )
+)
     partsupp_selected = partsupp.select("ps_partkey", "ps_suppkey", "ps_supplycost")
     supplier_selected = supplier.select("s_suppkey", "s_nationkey")
     nation_selected = nation.select("n_nationkey", "n_name")
@@ -70,7 +70,7 @@ def join_with_lineitem_and_orders(
     return (
         lineitem.join(
             dimension,
-(lineitem.l_partkey == dimension.p_partkey)
+            (lineitem.l_partkey == dimension.p_partkey)
             & (lineitem.l_suppkey == dimension.ps_suppkey),
         ).join(
             orders,
