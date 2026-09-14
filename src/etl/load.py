@@ -12,6 +12,6 @@ def write_profit_report(
     generaría archivos diminutos y sobrecarga de metadata en el _delta_log sin
     ningún beneficio real de partition pruning para una tabla tan pequeña.
     """
-    df.write.mode("overwrite").partitionBy("n_name", "order_year").saveAsTable(
+df.coalesce(1).write.mode("overwrite").saveAsTable(
         f"{catalog}.{schema}.{table_name}"
     )
