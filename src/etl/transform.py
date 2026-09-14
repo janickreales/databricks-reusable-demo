@@ -26,11 +26,11 @@ def build_green_part_dimension(
     las columnas necesarias en cada paso para mantener el tamaño del broadcast
     bajo control (ps_partkey, ps_suppkey, ps_supplycost, n_name).
     """
-    part_filtered = broadcast(
-        part.sparkSession.sql(
-            f"SELECT p_partkey, p_name FROM {CATALOG}.{SCHEMA}.part WHERE p_name LIKE '%{part_name_filter}%'"
-        )
+part_filtered = broadcast(
+    part.filter(F.col("p_name").contains(part_name_filter)).select(
+        "p_partkey", "p_name"
     )
+)
     partsupp_selected = partsupp.select("ps_partkey", "ps_suppkey", "ps_supplycost")
     supplier_selected = supplier.select("s_suppkey", "s_nationkey")
     nation_selected = nation.select("n_nationkey", "n_name")
