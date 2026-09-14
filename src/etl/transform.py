@@ -65,7 +65,7 @@ def join_with_lineitem_and_orders(
     sobre lineitem completo.
     """
     return (
-        broadcast(lineitem)
+lineitem
         .join(
             dimension,
             (lineitem.l_partkey == dimension.p_partkey)
