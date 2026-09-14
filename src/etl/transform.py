@@ -9,6 +9,7 @@ siempre como el lado grande del join, sin forzar un broadcast sobre ella.
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.functions import broadcast
+from src.config import CATALOG, SCHEMA
 
 
 def build_green_part_dimension(
@@ -25,8 +26,10 @@ def build_green_part_dimension(
     las columnas necesarias en cada paso para mantener el tamaño del broadcast
     bajo control (ps_partkey, ps_suppkey, ps_supplycost, n_name).
     """
-    part_filtered = part.filter(F.col("p_name").contains(part_name_filter)).select(
-        "p_partkey", "p_name"
+part_filtered = broadcast(
+        part.filter(F.col("p_name").contains(part_name_filter)).select(
+            "p_partkey", "p_name"
+        )
     )
     partsupp_selected = partsupp.select("ps_partkey", "ps_suppkey", "ps_supplycost")
     supplier_selected = supplier.select("s_suppkey", "s_nationkey")
@@ -65,13 +68,11 @@ def join_with_lineitem_and_orders(
     sobre lineitem completo.
     """
     return (
-lineitem
-        .join(
+        lineitem.join(
             dimension,
-            (lineitem.l_partkey == dimension.p_partkey)
+(lineitem.l_partkey == dimension.p_partkey)
             & (lineitem.l_suppkey == dimension.ps_suppkey),
-        )
-        .join(
+        ).join(
             orders,
             lineitem.l_orderkey == orders.o_orderkey,
         )
