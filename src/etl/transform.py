@@ -65,11 +65,13 @@ def join_with_lineitem_and_orders(
     sobre lineitem completo.
     """
     return (
-        lineitem.join(
+        broadcast(lineitem)
+        .join(
             dimension,
             (lineitem.l_partkey == dimension.p_partkey)
             & (lineitem.l_suppkey == dimension.ps_suppkey),
-        ).join(
+        )
+        .join(
             orders,
             lineitem.l_orderkey == orders.o_orderkey,
         )
