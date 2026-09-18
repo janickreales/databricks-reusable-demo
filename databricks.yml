@@ -17,3 +17,14 @@ targets:
   # prod:
   #   workspace:
   #     host: https://dbc-16aad3cb-14ec.cloud.databricks.com
+
+resources:
+  jobs:
+    daily_revenue_job:
+      name: "Daily Revenue Summary"
+      schedule:
+        quartz_cron_expression: "0 0 6 * * ?"
+      tasks:
+        - task_key: daily_revenue
+          notebook_task:
+            notebook_path: ./notebooks/daily_revenue_summary_source.py
