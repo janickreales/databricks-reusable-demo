@@ -17,3 +17,15 @@ targets:
   # prod:
   #   workspace:
   #     host: https://dbc-16aad3cb-14ec.cloud.databricks.com
+
+resources:
+  jobs:
+    trip_summary_job:
+      name: "Trip Summary - Format Comparison"
+      tasks:
+        - task_key: source_format_notebook
+          notebook_task:
+            notebook_path: ./notebooks/trip_summary_source.py
+        - task_key: ipynb_format_notebook
+          notebook_task:
+            notebook_path: ./notebooks/trip_summary.ipynb
