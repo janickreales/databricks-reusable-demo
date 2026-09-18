@@ -2,18 +2,26 @@
 # MAGIC %md
 # MAGIC # Resumen de viajes NYC Taxi
 # MAGIC Análisis exploratorio, calidad de datos, features derivados y detección de anomalías sobre `samples.nyctaxi.trips`.
+
 # COMMAND ----------
+
 CATALOG = "samples"
 SCHEMA = "nyctaxi"
 TABLE = "trips"
+
 # COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Carga y validación inicial
+
 # COMMAND ----------
+
 df = spark.table(f"{CATALOG}.{SCHEMA}.{TABLE}")
 print(f"Filas totales: {df.count()}")
 df.printSchema()
+
 # COMMAND ----------
+
 from pyspark.sql import functions as F
 
 invalid_distance = df.filter(F.col("trip_distance") <= 0).count()
@@ -30,10 +38,14 @@ df_clean = df.filter(
     & (F.col("tpep_dropoff_datetime") >= F.col("tpep_pickup_datetime"))
 )
 print(f"Filas después de limpiar: {df_clean.count()}")
+
 # COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Ingeniería de features
+
 # COMMAND ----------
+
 df_features = (
     df_clean
     .withColumn(
@@ -46,10 +58,14 @@ df_features = (
     .withColumn("is_weekend", F.dayofweek("tpep_pickup_datetime").isin([1, 7]))
 )
 df_features.select("trip_duration_min", "avg_speed_mph", "fare_per_mile", "pickup_hour", "is_weekend").show(5)
+
 # COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Agregaciones exploratorias (Python)
+
 # COMMAND ----------
+
 top_zips = (
     df_features.groupBy("pickup_zip")
     .agg(
@@ -58,21 +74,27 @@ top_zips = (
         F.avg("trip_distance").alias("avg_distance"),
         F.avg("trip_duration_min").alias("avg_duration_min"),
     )
-    .orderBy(F.desc("total_trips"))
+    .orderBy(F.desc("total_trip"))
     .limit(10)
 )
 top_zips.show()
+
 # COMMAND ----------
+
 demand_by_hour = (
     df_features.groupBy("pickup_hour")
     .agg(F.count("*").alias("total_trips"), F.avg("fare_amount").alias("avg_fare"))
     .orderBy("pickup_hour")
 )
 demand_by_hour.show(24)
+
 # COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Las mismas preguntas, en SQL puro
+
 # COMMAND ----------
+
 # MAGIC %sql
 # MAGIC SELECT
 # MAGIC   pickup_zip,
@@ -83,7 +105,9 @@ demand_by_hour.show(24)
 # MAGIC GROUP BY pickup_zip
 # MAGIC ORDER BY total_revenue DESC
 # MAGIC LIMIT 10
+
 # COMMAND ----------
+
 # MAGIC %sql
 # MAGIC SELECT
 # MAGIC   HOUR(tpep_pickup_datetime) AS pickup_hour,
@@ -91,7 +115,9 @@ demand_by_hour.show(24)
 # MAGIC FROM samples.nyctaxi.trips
 # MAGIC GROUP BY HOUR(tpep_pickup_datetime)
 # MAGIC ORDER BY pickup_hour
+
 # COMMAND ----------
+
 # MAGIC %sql
 # MAGIC WITH stats AS (
 # MAGIC   SELECT AVG(fare_amount / trip_distance) AS avg_fare_per_mile
